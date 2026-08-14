@@ -152,5 +152,47 @@ function(year = "", rv_type = "", manufacturer = "", brand = "",
     response_payload$warning <- "Fewer than 3 comps found. Widen search criteria."
   }
   
+  # ... existing valuation code above ...
+  
   return(response_payload)
+}
+
+# ==========================================
+# CASCADING LOOKUP ENDPOINTS (ADD BELOW HERE)
+# ==========================================
+
+#* Fetch distinct active manufacturers
+#* @get /manufacturers
+function() {
+  con <- get_db_con()
+  if (is.null(con)) return(list())
+  
+  query <- "
+    SELECT DISTINCT \"ManufacturerNew\" AS mfr 
+    FROM model.canada_available 
+    WHERE \"ManufacturerNew\" IS NOT NULL AND \"ManufacturerNew\" != '' AND \"ManufacturerNew\" != 'Unknown'
+    ORDER BY mfr
+  "
+  res <- dbGetQuery(con, query)
+  dbDisconnect(con)
+  return(res$mfr)
+}
+
+#* Fetch distinct brands for a selected manufacturer
+#* @param manufacturer Selected manufacturer name
+#* @get /brands
+function(manufacturer = "") {
+  con <- get_db_con()
+  if (is.null(con)) return(list())
+  
+  query <- sprintf("
+    SELECT DISTINCT \"Brand\" AS brand 
+    FROM model.canada_available 
+    WHERE \"ManufacturerNew\" = %s AND \"Brand\" IS NOT NULL AND \"Brand\" != '' AND \"Brand\" != 'Unknown'
+    ORDER BY brand
+  ", dbQuoteString(con, manufacturer))
+  
+  res <- dbGetQuery(con, query)
+  dbDisconnect(con)
+  return(res$brand)
 }
