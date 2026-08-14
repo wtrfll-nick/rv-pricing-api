@@ -1,3 +1,5 @@
+# ***NOTE*** to edit this script, simply copy paste into the github file of the same name
+
 library(plumber)
 library(DBI)
 library(RPostgres)
@@ -195,4 +197,23 @@ function(manufacturer = "") {
   res <- dbGetQuery(con, query)
   dbDisconnect(con)
   return(res$brand)
+}
+
+#* Fetch distinct models for a selected brand
+#* @param brand Selected brand name
+#* @get /models
+function(brand = "") {
+  con <- get_db_con()
+  if (is.null(con)) return(list())
+  
+  query <- sprintf("
+    SELECT DISTINCT \"Model\" AS model_name 
+    FROM model.canada_available 
+    WHERE \"Brand\" = %s AND \"Model\" IS NOT NULL AND \"Model\" != '' AND \"Model\" != 'Unknown'
+    ORDER BY model_name
+  ", dbQuoteString(con, brand))
+  
+  res <- dbGetQuery(con, query)
+  dbDisconnect(con)
+  return(res$model_name)
 }
