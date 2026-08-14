@@ -21,13 +21,17 @@ get_db_con <- function() {
   }, error = function(e) { NULL })
 }
 
-#* Enable CORS for cross-domain WordPress and agency requests
+#* CORS Filter: Allow cross-origin requests and custom headers
 #* @filter cors
-cors <- function(req, res) {
+function(req, res) {
+  # Tell the browser it is allowed to connect
   res$setHeader("Access-Control-Allow-Origin", "*")
   res$setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-  res$setHeader("Access-Control-Allow-Headers", "Content-Type")
   
+  # CRITICAL FIX: Explicitly tell the browser the "Authorization" header is permitted
+  res$setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+  
+  # Intercept the browser's pre-flight check and approve it immediately
   if (req$REQUEST_METHOD == "OPTIONS") {
     res$status <- 200
     return(list())
